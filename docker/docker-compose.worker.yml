@@ -1,0 +1,54 @@
+version: '3.8'
+
+#
+# Docker Compose para VPS Worker
+# Apenas Redis local e infraestrutura para receber instâncias do Master
+#
+
+services:
+  # ===========================================
+  # REDIS LOCAL (Para cache das instâncias)
+  # ===========================================
+  redis:
+    image: redis:7-alpine
+    container_name: whatize_redis_worker
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASS:?Defina REDIS_PASS no .env}
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - whatize_net
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    labels:
+      - "whatize=true"
+      - "whatize.service=redis"
+      - "whatize.worker=true"
+
+# ===========================================
+# REDE
+# ===========================================
+networks:
+  whatize_net:
+    name: whatize_net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ===========================================
+# VOLUMES
+# ===========================================
+volumes:
+  redis_data:
+    name: whatize_redis_worker_data
