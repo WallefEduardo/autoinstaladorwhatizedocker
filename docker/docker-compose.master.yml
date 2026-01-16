@@ -168,6 +168,7 @@ services:
       REDIS_URI: redis://redis-baileys:6379
       API_KEY_SECRET: ${BAILEYS_API_KEY:-whatize-baileys-secret}
       WHATIZE_WEBHOOK_TOKEN: ${BAILEYS_WEBHOOK_TOKEN}
+      BACKEND_URL: ${BACKEND_URL}
       CORS_ORIGINS: ${FRONTEND_URL},${BACKEND_URL}
       LOG_LEVEL: info
       TZ: America/Sao_Paulo
