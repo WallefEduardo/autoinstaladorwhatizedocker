@@ -183,20 +183,66 @@ print_step "Iniciando containers"
 
 cd "${SCRIPT_DIR}/docker"
 
-# Subir com docker compose
+# Subir apenas infraestrutura primeiro (postgres, redis)
+print_substep "Iniciando banco de dados e cache..."
+docker compose -f docker-compose.master.yml up -d postgres postgres-lookup redis redis-baileys
+sleep 15
+
+# Aguardar postgres ficar pronto
+print_substep "Aguardando banco de dados..."
+until docker exec whatize_postgres pg_isready -U whatize -d whatize > /dev/null 2>&1; do
+    sleep 2
+done
+print_success "Banco de dados pronto"
+
+# Rodar migrations usando container temporário
+print_substep "Executando migrations do banco de dados..."
+docker run --rm --network whatize_net \
+    -e DB_HOST=postgres \
+    -e DB_PORT=5432 \
+    -e DB_USER=whatize \
+    -e DB_PASS=${DB_PASS} \
+    -e DB_NAME=whatize \
+    whatize-backend:latest npm run db:migrate 2>&1 || {
+    print_warning "Migrations falharam, tentando novamente..."
+    sleep 5
+    docker run --rm --network whatize_net \
+        -e DB_HOST=postgres \
+        -e DB_PORT=5432 \
+        -e DB_USER=whatize \
+        -e DB_PASS=${DB_PASS} \
+        -e DB_NAME=whatize \
+        whatize-backend:latest npm run db:migrate 2>&1 || print_error "Falha nas migrations"
+}
+print_success "Migrations executadas"
+
+# Rodar seeders para popular dados iniciais
+print_substep "Populando banco de dados com dados iniciais..."
+docker run --rm --network whatize_net \
+    -e DB_HOST=postgres \
+    -e DB_PORT=5432 \
+    -e DB_USER=whatize \
+    -e DB_PASS=${DB_PASS} \
+    -e DB_NAME=whatize \
+    whatize-backend:latest npm run db:seed 2>&1 || {
+    print_warning "Seeds falharam, tentando novamente..."
+    sleep 5
+    docker run --rm --network whatize_net \
+        -e DB_HOST=postgres \
+        -e DB_PORT=5432 \
+        -e DB_USER=whatize \
+        -e DB_PASS=${DB_PASS} \
+        -e DB_NAME=whatize \
+        whatize-backend:latest npm run db:seed 2>&1 || print_warning "Seeds falharam - pode precisar rodar manualmente"
+}
+print_success "Dados iniciais populados"
+
+# Agora subir todos os serviços
+print_substep "Iniciando todos os serviços..."
 docker compose -f docker-compose.master.yml up -d
 
 print_substep "Aguardando containers ficarem saudáveis..."
 sleep 30
-
-# Rodar migrations do banco de dados
-print_substep "Executando migrations do banco de dados..."
-docker exec whatize_backend npm run db:migrate 2>&1 || {
-    print_warning "Migrations falharam, tentando novamente em 10 segundos..."
-    sleep 10
-    docker exec whatize_backend npm run db:migrate 2>&1 || print_error "Falha nas migrations"
-}
-print_success "Migrations executadas"
 
 # Verificar saúde
 docker_health_check docker-compose.master.yml || true
