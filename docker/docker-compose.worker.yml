@@ -1,5 +1,3 @@
-version: '3.8'
-
 #
 # Docker Compose para VPS Worker
 # Apenas Redis local e infraestrutura para receber instâncias do Master

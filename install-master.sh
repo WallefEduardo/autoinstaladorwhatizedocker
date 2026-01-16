@@ -189,6 +189,15 @@ docker compose -f docker-compose.master.yml up -d
 print_substep "Aguardando containers ficarem saudáveis..."
 sleep 30
 
+# Rodar migrations do banco de dados
+print_substep "Executando migrations do banco de dados..."
+docker exec whatize_backend npm run db:migrate 2>&1 || {
+    print_warning "Migrations falharam, tentando novamente em 10 segundos..."
+    sleep 10
+    docker exec whatize_backend npm run db:migrate 2>&1 || print_error "Falha nas migrations"
+}
+print_success "Migrations executadas"
+
 # Verificar saúde
 docker_health_check docker-compose.master.yml || true
 
