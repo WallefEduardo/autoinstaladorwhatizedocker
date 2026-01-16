@@ -377,11 +377,24 @@ systemctl start certbot.timer 2>/dev/null || true
 print_success "SSL configurado"
 
 # ===========================================
+# EXECUTAR MIGRATIONS DO LOOKUP
+# ===========================================
+print_step "Configurando banco de dados do Lookup"
+
+print_substep "Executando migrations do Lookup Service..."
+docker exec whatize_lookup npm run db:migrate 2>&1 || {
+    print_warning "Migrations do Lookup falharam, tentando novamente..."
+    sleep 5
+    docker exec whatize_lookup npm run db:migrate 2>&1 || print_warning "Falha nas migrations do Lookup"
+}
+print_success "Migrations do Lookup executadas"
+
+# ===========================================
 # REGISTRAR INSTÂNCIA NO LOOKUP
 # ===========================================
 print_step "Registrando instância principal"
 
-sleep 10  # Aguardar serviços estabilizarem
+sleep 5  # Aguardar serviços estabilizarem
 
 # Registrar via API
 curl -s -X POST "http://localhost:3500/companies" \
