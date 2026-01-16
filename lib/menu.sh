@@ -150,6 +150,9 @@ collect_master_info() {
     read_input "URL do repositório Git" "https://github.com/seu-usuario/whatize.git" GIT_REPO_URL
     read_input "Branch do repositório" "main" GIT_BRANCH
 
+    read -sp "Token do Git (para repos privados, deixe vazio se público): " GIT_TOKEN
+    echo
+
     # Email para SSL
     echo -e "\n${BOLD_WHITE}Configure o SSL:${NC}\n"
 
