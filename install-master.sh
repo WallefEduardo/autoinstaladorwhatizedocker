@@ -66,6 +66,7 @@ WHATIZE_PATH="/home/${DEPLOY_USER}/whatize"
 
 if [ -d "$WHATIZE_PATH" ]; then
     print_info "Diretório já existe, atualizando..."
+    git config --global --add safe.directory "$WHATIZE_PATH"
     cd "$WHATIZE_PATH"
     git fetch --all
     git reset --hard origin/${GIT_BRANCH}
