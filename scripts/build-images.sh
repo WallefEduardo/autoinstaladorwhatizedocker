@@ -75,11 +75,11 @@ fi
 print_substep "Building: whatize-backend:${VERSION}"
 
 if [ -d "backend" ]; then
-    # Preferir Dockerfile.optimized se existir
-    if [ -f "backend/Dockerfile.optimized" ]; then
-        DOCKERFILE="backend/Dockerfile.optimized"
-    elif [ -f "backend/Dockerfile" ]; then
+    # Usar Dockerfile padrão (tem migrations automáticas)
+    if [ -f "backend/Dockerfile" ]; then
         DOCKERFILE="backend/Dockerfile"
+    elif [ -f "backend/Dockerfile.optimized" ]; then
+        DOCKERFILE="backend/Dockerfile.optimized"
     else
         print_error "Nenhum Dockerfile encontrado para backend"
         exit 1
