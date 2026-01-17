@@ -118,15 +118,15 @@ INSTANCE_NAME=${INSTANCE_NAME}
 DB_NAME=whatize
 DB_USER=whatize
 DB_PASS=${DB_PASS}
-DB_PORT=5432
+DB_PORT=${DB_PORT}
 
 # Banco de dados Lookup
 LOOKUP_DB_PASS=${LOOKUP_DB_PASS:-$(generate_password 24)}
 
 # Redis
 REDIS_PASS=${REDIS_PASS}
-REDIS_PORT=6379
-REDIS_BAILEYS_PORT=6380
+REDIS_PORT=${REDIS_PORT}
+REDIS_BAILEYS_PORT=$((REDIS_PORT + 1))
 
 # JWT
 JWT_SECRET=${JWT_SECRET}
@@ -134,20 +134,20 @@ JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
 
 # Lookup Service
 LOOKUP_API_KEY=${LOOKUP_API_KEY}
-LOOKUP_PORT=3500
-LOOKUP_DB_PORT=5433
+LOOKUP_PORT=${LOOKUP_PORT}
+LOOKUP_DB_PORT=$((DB_PORT + 1))
 
 # Baileys Service
 BAILEYS_API_KEY=${BAILEYS_API_KEY}
 BAILEYS_WEBHOOK_TOKEN=${BAILEYS_WEBHOOK_TOKEN}
-BAILEYS_PORT=3001
+BAILEYS_PORT=${BAILEYS_PORT}
 
 # Backend
-BACKEND_PORT=3000
+BACKEND_PORT=${BACKEND_PORT}
 ENV_TOKEN=${ENV_TOKEN}
 
 # Frontend
-FRONTEND_PORT=3333
+FRONTEND_PORT=${FRONTEND_PORT}
 
 # SSL
 SSL_EMAIL=${SSL_EMAIL}
@@ -259,7 +259,7 @@ server {
     server_name ${FRONTEND_DOMAIN};
 
     location / {
-        proxy_pass http://localhost:3333;
+        proxy_pass http://localhost:${FRONTEND_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -281,7 +281,7 @@ server {
     client_max_body_size 50M;
 
     location / {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:${BACKEND_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -293,7 +293,7 @@ server {
     }
 
     location /socket.io {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:${BACKEND_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -314,7 +314,7 @@ server {
     client_max_body_size 50M;
 
     location / {
-        proxy_pass http://localhost:3500;
+        proxy_pass http://localhost:${LOOKUP_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
@@ -326,7 +326,7 @@ server {
     }
 
     location /api/socket.io {
-        proxy_pass http://localhost:3500;
+        proxy_pass http://localhost:${LOOKUP_PORT};
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -397,17 +397,17 @@ print_step "Registrando instância principal"
 sleep 5  # Aguardar serviços estabilizarem
 
 # Registrar via API
-curl -s -X POST "http://localhost:3500/companies" \
+curl -s -X POST "http://localhost:${LOOKUP_PORT}/companies" \
     -H "Content-Type: application/json" \
     -H "X-API-Key: ${LOOKUP_API_KEY}" \
     -d "{
         \"code\": \"${INSTANCE_CODE}\",
-        \"backendUrl\": \"https://${BACKEND_DOMAIN}\",
+        \"backendUrl\": \"http://backend:${BACKEND_PORT}\",
         \"companyName\": \"${INSTANCE_NAME}\"
     }" || print_warning "Instância pode já estar registrada"
 
 # Definir como padrão para signup
-curl -s -X PUT "http://localhost:3500/signup-config/${INSTANCE_CODE}" \
+curl -s -X PUT "http://localhost:${LOOKUP_PORT}/signup-config/${INSTANCE_CODE}" \
     -H "X-API-Key: ${LOOKUP_API_KEY}" || true
 
 print_success "Instância registrada no Lookup"

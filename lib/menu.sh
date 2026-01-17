@@ -144,6 +144,16 @@ collect_master_info() {
     echo
     DEPLOY_PASS=${DEPLOY_PASS:-$(generate_password 16)}
 
+    # Portas
+    echo -e "\n${BOLD_WHITE}Configure as portas (deixe em branco para usar padrão):${NC}\n"
+
+    read_input "Porta do Backend" "3000" BACKEND_PORT validate_port
+    read_input "Porta do Frontend" "3333" FRONTEND_PORT validate_port
+    read_input "Porta do PostgreSQL" "5432" DB_PORT validate_port
+    read_input "Porta do Redis" "6379" REDIS_PORT validate_port
+    read_input "Porta do Lookup" "3500" LOOKUP_PORT validate_port
+    read_input "Porta do Baileys" "3001" BAILEYS_PORT validate_port
+
     # Repositório
     echo -e "\n${BOLD_WHITE}Configure o repositório:${NC}\n"
 
@@ -161,12 +171,13 @@ collect_master_info() {
     # Resumo
     print_step "Resumo da Configuração"
 
-    echo -e "${WHITE}Frontend:${NC} https://${FRONTEND_DOMAIN}"
-    echo -e "${WHITE}Backend:${NC} https://${BACKEND_DOMAIN}"
-    echo -e "${WHITE}Lookup:${NC} https://${LOOKUP_DOMAIN}"
+    echo -e "${WHITE}Frontend:${NC} https://${FRONTEND_DOMAIN} (porta ${FRONTEND_PORT})"
+    echo -e "${WHITE}Backend:${NC} https://${BACKEND_DOMAIN} (porta ${BACKEND_PORT})"
+    echo -e "${WHITE}Lookup:${NC} https://${LOOKUP_DOMAIN} (porta ${LOOKUP_PORT})"
     echo -e "${WHITE}Instância:${NC} ${INSTANCE_CODE} - ${INSTANCE_NAME}"
     echo -e "${WHITE}Repositório:${NC} ${GIT_REPO_URL} (${GIT_BRANCH})"
     echo -e "${WHITE}SSL Email:${NC} ${SSL_EMAIL}"
+    echo -e "${WHITE}Portas:${NC} PostgreSQL=${DB_PORT}, Redis=${REDIS_PORT}, Baileys=${BAILEYS_PORT}"
 
     echo
     if ! confirm_menu "As informações estão corretas?"; then
