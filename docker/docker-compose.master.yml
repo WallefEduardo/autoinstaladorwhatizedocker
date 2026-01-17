@@ -124,7 +124,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3500
+      PORT: ${LOOKUP_PORT:-3500}
       DB_HOST: postgres-lookup
       DB_PORT: 5432
       DB_NAME: lookup_service
@@ -139,9 +139,9 @@ services:
     networks:
       - whatize_net
     ports:
-      - "${LOOKUP_PORT:-3500}:3500"
+      - "${LOOKUP_PORT:-3500}:${LOOKUP_PORT:-3500}"
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3500/health"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:$PORT/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -162,7 +162,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: ${BAILEYS_PORT:-3001}
       REDIS_URI: redis://redis-baileys:6379
       REDIS_URI_CONNECTION: redis://redis-baileys:6379
       REDIS_URI_MSG_CONN: redis://redis-baileys:6379
@@ -179,7 +179,7 @@ services:
     networks:
       - whatize_net
     ports:
-      - "${BAILEYS_PORT:-3001}:3001"
+      - "${BAILEYS_PORT:-3001}:${BAILEYS_PORT:-3001}"
     volumes:
       - baileys_storage:/app/storage
       - baileys_logs:/app/logs
@@ -205,7 +205,7 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${BACKEND_PORT:-3000}
       # Database
       DB_DIALECT: postgres
       DB_HOST: postgres
@@ -223,11 +223,11 @@ services:
       FRONTEND_URL: ${FRONTEND_URL}
       BACKEND_URL: ${BACKEND_URL}
       # Baileys Service
-      BAILEYS_SERVICE_URL: http://baileys:3001
+      BAILEYS_SERVICE_URL: http://baileys:${BAILEYS_PORT:-3001}
       BAILEYS_API_KEY: ${BAILEYS_API_KEY:-whatize-baileys-secret}
       BAILEYS_WEBHOOK_TOKEN: ${BAILEYS_WEBHOOK_TOKEN}
       # Lookup Service
-      LOOKUP_API_URL: http://lookup:3500
+      LOOKUP_API_URL: http://lookup:${LOOKUP_PORT:-3500}
       LOOKUP_API_KEY: ${LOOKUP_API_KEY}
       # Instance
       INSTANCE_CODE: ${INSTANCE_CODE:-0001}
@@ -249,12 +249,12 @@ services:
     networks:
       - whatize_net
     ports:
-      - "${BACKEND_PORT:-3000}:3000"
+      - "${BACKEND_PORT:-3000}:${BACKEND_PORT:-3000}"
     volumes:
       - backend_public:/app/public
       - backend_logs:/app/logs
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/', (r) => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.PORT + '/', (r) => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
       timeout: 10s
       retries: 3
