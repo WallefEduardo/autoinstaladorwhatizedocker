@@ -237,6 +237,9 @@ services:
       ENV_TOKEN: ${ENV_TOKEN:-wtV}
       TZ: America/Sao_Paulo
       NODE_OPTIONS: "--max-old-space-size=2048"
+      # Paths for MainInstanceService
+      WHATIZE_PATH: ${WHATIZE_PATH:-/home/deploy/whatize}
+      DOCKER_COMPOSE_PATH: ${DOCKER_COMPOSE_PATH:-/root/autoinstaladorwhatizedocker/docker}
     depends_on:
       postgres:
         condition: service_healthy
@@ -254,6 +257,8 @@ services:
       - backend_public:/app/public
       - backend_logs:/app/logs
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${WHATIZE_PATH:-/home/deploy/whatize}:/home/deploy/whatize:rw
+      - ${DOCKER_COMPOSE_PATH:-/root/autoinstaladorwhatizedocker/docker}:/root/autoinstaladorwhatizedocker/docker:ro
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:' + process.env.PORT + '/', (r) => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))\""]
       interval: 30s
