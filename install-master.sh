@@ -402,7 +402,7 @@ curl -s -X POST "http://localhost:3500/companies" \
     -H "X-API-Key: ${LOOKUP_API_KEY}" \
     -d "{
         \"code\": \"${INSTANCE_CODE}\",
-        \"backendUrl\": \"http://localhost:3000\",
+        \"backendUrl\": \"https://${BACKEND_DOMAIN}\",
         \"companyName\": \"${INSTANCE_NAME}\"
     }" || print_warning "Instância pode já estar registrada"
 
