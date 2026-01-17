@@ -141,7 +141,7 @@ services:
     ports:
       - "${LOOKUP_PORT:-3500}:${LOOKUP_PORT:-3500}"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:$PORT/health"]
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:$$PORT/health"]
       interval: 30s
       timeout: 10s
       retries: 3
